@@ -1,0 +1,97 @@
+docker save -o my-image.tar <image_id>
+docker load -i /path/to/flash-drive/my-image.tar
+
+
+### Script ###  for windows ######## then for bash: first on git windows then for linux
+
+## 1- batch script:
+
+# Count the number of Docker images
+$imageCount = (docker images -q).Count
+
+Write-Host "Number of Docker images: $imageCount"
+
+# Check if there are any images before attempting to save them offline
+if ($imageCount -gt 0) {
+    # Specify a directory to save the images
+    $saveDirectory = "C:\path\to\offline\images"
+
+    # Create the save directory if it doesn't exist
+    New-Item -ItemType Directory -Force -Path $saveDirectory | Out-Null
+
+    # Generate a timestamp for the save
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+
+    # Save each image offline with a unique tag based on the timestamp
+    docker images -q | ForEach-Object { docker save -o "$saveDirectory\image_${timestamp}_$_`.tar" $_ }
+## To save image with its name:
+   # Save each image offline with the original image name and timestamp
+  docker images --format "{{.Repository}}:{{.Tag}}" | ForEach-Object { docker save -o "$save_directory/$__$_.tar" $_ $timestamp }
+  ######################-------_------_----_----###############################
+
+    Write-Host "Images saved offline to: $saveDirectory"
+} else {
+    Write-Host "No Docker images found."
+}
+
+##########################GIT Code###########################
+### git on windows
+#!/bin/bash
+
+# Count the number of Docker images
+image_count=$(docker images -q | wc -l)
+
+echo "Number of Docker images: $image_count"
+
+# Check if there are any images before attempting to save them offline
+if [ "$image_count" -gt 0 ]; then
+  # Specify a directory to save the images
+  save_directory="/path/to/offline/images"
+
+  # Create the save directory if it doesn't exist
+  mkdir -p "$save_directory"
+
+  # Generate a timestamp for the save
+  timestamp=$(date +"%Y%m%d_%H%M%S")
+
+  # Save each image offline with a unique tag based on the timestamp
+  docker images -q | xargs -I {} docker save -o "$save_directory/image_${timestamp}_{}.tar" {}
+  
+  echo "Images saved offline to: $save_directory"
+else
+  echo "No Docker images found."
+fi
+
+
+
+### bash script on unix
+
+#!/bin/bash
+
+# Count the number of Docker images
+image_count=$(docker images -q | wc -l)
+
+echo "Number of Docker images: $image_count"
+
+# Check if there are any images before attempting to save them offline
+if [ "$image_count" -gt 0 ]; then
+  # Specify a directory to save the images
+  save_directory="/path/to/offline/images"
+
+  # Create the save directory if it doesn't exist
+  mkdir -p "$save_directory"
+
+  # Generate a timestamp for the save
+  timestamp=$(date +"%Y%m%d_%H%M%S")
+
+  # Save each image offline with a unique tag based on the timestamp
+  docker images -q | xargs -I {} docker save -o "$save_directory/image_${timestamp}_{}.tar" {}
+## To use image name not and timestamp
+  docker images --format "{{.Repository}}:{{.Tag}}" | xargs -I {} docker save -o "$save_directory/{}_{}.tar" {} $timestamp
+
+  
+  echo "Images saved offline to: $save_directory"
+else
+  echo "No Docker images found."
+fi
+
